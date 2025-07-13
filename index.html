@@ -61,30 +61,6 @@
     intensidadSlider.oninput = () => intensidadValor.textContent = intensidadSlider.value;
     duracionSlider.oninput = () => duracionValor.textContent = duracionSlider.value;
 
-    const descripciones = {
-      "Press banca": "Acostado en una banca plana, baja la barra hasta el pecho controladamente y empuja sin rebotar.",
-      "Aperturas": "Abre los brazos con mancuernas sin bloquear los codos, mantén el control durante todo el movimiento.",
-      "Press inclinado": "Inclina la banca 30-45°, baja la barra al pecho superior y sube con fuerza controlada.",
-      "Dominadas": "Sujeta la barra con agarre prono y sube hasta que el mentón supere la barra. Baja lento.",
-      "Remo": "Con la espalda recta, lleva la barra hacia el abdomen y aprieta los omóplatos.",
-      "Peso muerto": "Mantén la espalda recta, baja con piernas y glúteos, y sube usando la cadera.",
-      "Sentadillas": "Baja flexionando las rodillas sin que pasen la punta de los pies. Espalda recta.",
-      "Prensa": "Coloca los pies al ancho de hombros y empuja la plataforma controladamente.",
-      "Curl femoral": "Acostado boca abajo, flexiona las rodillas llevando los talones hacia los glúteos.",
-      "Press militar": "Empuja la barra hacia arriba sobre la cabeza sin arquear la espalda.",
-      "Elevaciones laterales": "Levanta mancuernas a los lados hasta la altura del hombro con los codos ligeramente flexionados.",
-      "Pájaros": "Inclínate hacia adelante y eleva los brazos hacia los lados para trabajar deltoides posteriores.",
-      "Curl barra": "Mantén los codos pegados al torso y eleva la barra controladamente.",
-      "Curl mancuernas": "Alterna brazos o simultáneos, sin balancear el cuerpo.",
-      "Curl martillo": "Sujeta las mancuernas en posición neutra y flexiona los codos.",
-      "Fondos": "Usa un banco o paralelas, baja el cuerpo flexionando codos sin tocar el suelo.",
-      "Jalones": "Agarra la barra al ancho de los hombros y llévala al pecho, mantén la espalda erguida.",
-      "Extensión mancuerna": "Eleva una mancuerna detrás de la cabeza con ambos brazos, extiende los codos.",
-      "Crunch": "Acostado boca arriba, eleva el torso sin despegar la espalda baja del suelo.",
-      "Plancha": "Apóyate en antebrazos y puntas de pies, mantén el cuerpo recto y contraído.",
-      "Elevaciones": "Acostado, eleva las piernas juntas sin arquear la zona lumbar."
-    };
-
     const gruposMusculares = [
       { nombre: "Pecho", ejercicios: ["Press banca", "Aperturas", "Press inclinado"] },
       { nombre: "Espalda", ejercicios: ["Dominadas", "Remo", "Peso muerto"] },
@@ -94,11 +70,6 @@
       { nombre: "Tríceps", ejercicios: ["Fondos", "Jalones", "Extensión mancuerna"] },
       { nombre: "Abdomen", ejercicios: ["Crunch", "Plancha", "Elevaciones"] }
     ];
-
-    function getImagenEjercicio(nombre) {
-      const query = nombre.replace(/ /g, ',');
-      return `https://source.unsplash.com/300x200/?${query},workout`;
-    }
 
     function getSeriesYReps(intensidad) {
       if (intensidad <= 2) return "3 series de 12 a 15 repeticiones";
@@ -122,6 +93,15 @@
 
       let gruposDisponibles = [...gruposMusculares];
 
+      // Tiempo de calentamiento aeróbico (mínimo 10 min o 10% del tiempo)
+      const tiempoCalentamiento = Math.max(10, Math.floor(duracion * 0.1));
+
+      // Tiempo restante para ejercicios de fuerza
+      const tiempoParaFuerza = duracion - tiempoCalentamiento;
+
+      // Tiempo estimado por ejercicio de fuerza
+      const tiempoPorEjercicio = Math.floor(tiempoParaFuerza / ejerciciosPorDia);
+
       for (let i = 0; i < dias; i++) {
         let ejerciciosDia = [];
 
@@ -135,18 +115,64 @@
 
         const div = document.createElement("div");
         div.className = "bg-gray-100 rounded-xl p-4 shadow";
+
         div.innerHTML = `
           <h2 class="text-xl font-bold mb-4">Día ${i + 1}</h2>
+
+          <div class="mb-6 bg-white p-4 rounded-xl shadow text-center">
+            <div class="text-3xl mb-2">🚴‍♂️🏃‍♂️</div>
+            <p class="font-semibold text-lg">Calentamiento Aeróbico</p>
+            <p class="text-blue-700 font-bold">Cinta o bicicleta. Hazlo a tu ritmo!</p>
+            <p class="text-sm text-orange-600">⏱️ Duración: ${tiempoCalentamiento} minutos</p>
+          </div>
+
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            ${ejerciciosDia.map(ej => `
-              <div class="text-center space-y-2">
-                <img src="${getImagenEjercicio(ej.ejercicio)}" alt="${ej.ejercicio}" class="rounded-xl mx-auto shadow" />
-                <p class="font-semibold">${ej.grupo}</p>
-                <p class="text-gray-700">${ej.ejercicio}</p>
-                <p class="text-sm text-blue-600">${getSeriesYReps(intensidad)}</p>
-                <p class="text-sm text-gray-600 italic">${descripciones[ej.ejercicio] || ""}</p>
-              </div>
-            `).join("")}
+            ${ejerciciosDia.map(ej => {
+              const emoji = {
+                "Pecho": "🏋️",
+                "Espalda": "🏋️",
+                "Piernas": "🦵",
+                "Hombros": "💪",
+                "Bíceps": "💪",
+                "Tríceps": "💪",
+                "Abdomen": "🏋️"
+              }[ej.grupo];
+
+              const descripciones = {
+                "Press banca": "Acostate en banca plana, pies en el suelo. Bajá la barra controladamente hasta el pecho y subí sin arquear la espalda.",
+                "Aperturas": "Con mancuernas y codos ligeramente flexionados, abrí los brazos como si abrazaras un árbol y volvé lento.",
+                "Press inclinado": "Con banca a 30-45°, bajá la barra al pecho superior y subí sin bloquear los codos.",
+                "Dominadas": "Agarre prono. Subí hasta que el mentón supere la barra y bajá controlado sin impulso.",
+                "Remo": "Espalda recta, incliná el torso. Llevá la barra al abdomen, apretando omóplatos.",
+                "Peso muerto": "Espalda recta, bajá con piernas y cadera. Subí empujando el suelo con los talones.",
+                "Sentadillas": "Bajá como si te sentaras, espalda recta, rodillas no deben pasar la punta de los pies.",
+                "Prensa": "Sentado, pies al ancho de hombros. Bajá hasta 90° y empujá sin extender por completo.",
+                "Curl femoral": "Acostado boca abajo, flexioná rodillas llevando talones hacia glúteos sin despegar la cadera.",
+                "Press militar": "Elevá la barra sobre la cabeza sin arquear la espalda. Controlá el movimiento.",
+                "Elevaciones laterales": "Con mancuernas, subí brazos hasta la altura del hombro. No uses impulso.",
+                "Pájaros": "Torso inclinado, abrí brazos hacia los lados. Trabajá deltoides posteriores.",
+                "Curl barra": "Codos fijos al cuerpo, subí la barra sin balancearte.",
+                "Curl mancuernas": "Alternado o simultáneo, controlá el movimiento y evitá arquear la espalda.",
+                "Curl martillo": "Agarre neutro, subí controladamente trabajando el braquial.",
+                "Fondos": "Bajá el cuerpo con codos pegados. No toques el suelo y subí sin bloquear codos.",
+                "Jalones": "Sentado, barra al pecho. Espalda erguida, sin balanceo.",
+                "Extensión mancuerna": "Sujetar detrás de la cabeza con ambos brazos. Extender los codos arriba.",
+                "Crunch": "Acostado, elevá el torso sin despegar zona lumbar. Controlá la bajada.",
+                "Plancha": "Antebrazos y pies en el suelo. Abdomen y glúteos firmes, cuerpo en línea recta.",
+                "Elevaciones": "Acostado, subí piernas rectas hasta 90°. No arquees la espalda al bajar."
+              };
+
+              return `
+                <div class="text-center bg-white p-4 rounded-xl shadow space-y-2">
+                  <div class="text-3xl">${emoji}</div>
+                  <p class="font-semibold">${ej.grupo}</p>
+                  <p class="text-blue-700 font-bold">${ej.ejercicio}</p>
+                  <p class="text-sm text-green-600">${getSeriesYReps(intensidad)}</p>
+                  <p class="text-sm text-orange-600">⏱️ Tiempo estimado: ${tiempoPorEjercicio} minutos</p>
+                  <p class="text-sm text-gray-600 italic">${descripciones[ej.ejercicio]}</p>
+                </div>
+              `;
+            }).join("")}
           </div>
         `;
         rutinaContainer.appendChild(div);
@@ -170,11 +196,11 @@
       }
 
       const opt = {
-        margin:       0.5,
-        filename:     'mi_rutina_TuGymBro.pdf',
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 },
-        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        margin: 0.5,
+        filename: 'mi_rutina_TuGymBro.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
       };
 
       html2pdf().from(rutinaContainer).set(opt).save();
