@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TuGymBro 💪</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+  <!-- HERO -->
+  <section class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-12">
+    <div class="max-w-4xl mx-auto text-center px-4">
+      <h1 class="text-4xl md:text-5xl font-extrabold mb-4">💪 Bienvenido a TuGymBro</h1>
+      <p class="text-lg md:text-xl">Generá tu rutina de entrenamiento 100% personalizada con inteligencia artificial.</p>
+    </div>
+  </section>
+
+  <!-- APP -->
+  <div class="max-w-4xl mx-auto bg-white shadow-xl rounded-2xl p-6 mt-8">
+    <h2 class="text-2xl font-bold text-center mb-6">Configurá tu rutina</h2>
+
+    <!-- Sliders -->
+    <div class="space-y-4">
+      <div>
+        <label class="font-semibold">📅 Días por semana: <span id="diasValor">3</span></label>
+        <input id="dias" type="range" min="1" max="7" value="3" class="w-full" />
+      </div>
+      <div>
+        <label class="font-semibold">🔥 Intensidad de Entrenamiento: <span id="intensidadValor">3</span></label>
+        <input id="intensidad" type="range" min="1" max="5" value="3" class="w-full" />
+      </div>
+      <div>
+        <label class="font-semibold">⏱️ Duración entrenamiento (min): <span id="duracionValor">45</span></label>
+        <input id="duracion" type="range" min="20" max="90" step="5" value="45" class="w-full" />
+      </div>
+    </div>
+
+    <!-- Botones -->
+    <div class="flex flex-wrap justify-center space-x-4 mt-6">
+      <button onclick="generarRutina()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl font-bold mt-2">GENERAR RUTINA</button>
+      <button onclick="limpiarRutina()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-bold mt-2">LIMPIAR</button>
+      <button onclick="descargarPDF()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl font-bold mt-2">DESCARGAR PDF</button>
+    </div>
+
+    <!-- Resultado -->
+    <div id="rutina" class="mt-8 space-y-8"></div>
+  </div>
+
+  <script>
+    const diasSlider = document.getElementById("dias");
+    const intensidadSlider = document.getElementById("intensidad");
+    const duracionSlider = document.getElementById("duracion");
+    const diasValor = document.getElementById("diasValor");
+    const intensidadValor = document.getElementById("intensidadValor");
+    const duracionValor = document.getElementById("duracionValor");
+    const rutinaContainer = document.getElementById("rutina");
+
+    diasSlider.oninput = () => diasValor.textContent = diasSlider.value;
+    intensidadSlider.oninput = () => intensidadValor.textContent = intensidadSlider.value;
+    duracionSlider.oninput = () => duracionValor.textContent = duracionSlider.value;
+
+    const descripciones = {
+      "Press banca": "Acostado en una banca plana, baja la barra hasta el pecho controladamente y empuja sin rebotar.",
+      "Aperturas": "Abre los brazos con mancuernas sin bloquear los codos, mantén el control durante todo el movimiento.",
+      "Press inclinado": "Inclina la banca 30-45°, baja la barra al pecho superior y sube con fuerza controlada.",
+      "Dominadas": "Sujeta la barra con agarre prono y sube hasta que el mentón supere la barra. Baja lento.",
+      "Remo": "Con la espalda recta, lleva la barra hacia el abdomen y aprieta los omóplatos.",
+      "Peso muerto": "Mantén la espalda recta, baja con piernas y glúteos, y sube usando la cadera.",
+      "Sentadillas": "Baja flexionando las rodillas sin que pasen la punta de los pies. Espalda recta.",
+      "Prensa": "Coloca los pies al ancho de hombros y empuja la plataforma controladamente.",
+      "Curl femoral": "Acostado boca abajo, flexiona las rodillas llevando los talones hacia los glúteos.",
+      "Press militar": "Empuja la barra hacia arriba sobre la cabeza sin arquear la espalda.",
+      "Elevaciones laterales": "Levanta mancuernas a los lados hasta la altura del hombro con los codos ligeramente flexionados.",
+      "Pájaros": "Inclínate hacia adelante y eleva los brazos hacia los lados para trabajar deltoides posteriores.",
+      "Curl barra": "Mantén los codos pegados al torso y eleva la barra controladamente.",
+      "Curl mancuernas": "Alterna brazos o simultáneos, sin balancear el cuerpo.",
+      "Curl martillo": "Sujeta las mancuernas en posición neutra y flexiona los codos.",
+      "Fondos": "Usa un banco o paralelas, baja el cuerpo flexionando codos sin tocar el suelo.",
+      "Jalones": "Agarra la barra al ancho de los hombros y llévala al pecho, mantén la espalda erguida.",
+      "Extensión mancuerna": "Eleva una mancuerna detrás de la cabeza con ambos brazos, extiende los codos.",
+      "Crunch": "Acostado boca arriba, eleva el torso sin despegar la espalda baja del suelo.",
+      "Plancha": "Apóyate en antebrazos y puntas de pies, mantén el cuerpo recto y contraído.",
+      "Elevaciones": "Acostado, eleva las piernas juntas sin arquear la zona lumbar."
+    };
+
+    const gruposMusculares = [
+      { nombre: "Pecho", ejercicios: ["Press banca", "Aperturas", "Press inclinado"] },
+      { nombre: "Espalda", ejercicios: ["Dominadas", "Remo", "Peso muerto"] },
+      { nombre: "Piernas", ejercicios: ["Sentadillas", "Prensa", "Curl femoral"] },
+      { nombre: "Hombros", ejercicios: ["Press militar", "Elevaciones laterales", "Pájaros"] },
+      { nombre: "Bíceps", ejercicios: ["Curl barra", "Curl mancuernas", "Curl martillo"] },
+      { nombre: "Tríceps", ejercicios: ["Fondos", "Jalones", "Extensión mancuerna"] },
+      { nombre: "Abdomen", ejercicios: ["Crunch", "Plancha", "Elevaciones"] }
+    ];
+
+    function getImagenEjercicio(nombre) {
+      const query = encodeURIComponent(nombre + " workout");
+      return `https://source.unsplash.com/300x200/?${query}`;
+    }
+
+    function getSeriesYReps(intensidad) {
+      if (intensidad <= 2) return "3 series de 12 a 15 repeticiones";
+      if (intensidad <= 4) return "4 series de 8 a 12 repeticiones";
+      return "5 series de 6 a 8 repeticiones";
+    }
+
+    function calcularEjerciciosPorDia(duracion) {
+      if (duracion < 40) return 3;
+      if (duracion < 60) return 4;
+      if (duracion < 80) return 5;
+      return 6;
+    }
+
+    function generarRutina() {
+      rutinaContainer.innerHTML = "";
+      const dias = parseInt(diasSlider.value);
+      const intensidad = parseInt(intensidadSlider.value);
+      const duracion = parseInt(duracionSlider.value);
+      const ejerciciosPorDia = calcularEjerciciosPorDia(duracion);
+
+      let gruposDisponibles = [...gruposMusculares];
+
+      for (let i = 0; i < dias; i++) {
+        let ejerciciosDia = [];
+
+        for (let j = 0; j < ejerciciosPorDia; j++) {
+          if (gruposDisponibles.length === 0) gruposDisponibles = [...gruposMusculares];
+          const index = Math.floor(Math.random() * gruposDisponibles.length);
+          const grupo = gruposDisponibles.splice(index, 1)[0];
+          const ejercicio = grupo.ejercicios[Math.floor(Math.random() * grupo.ejercicios.length)];
+          ejerciciosDia.push({ grupo: grupo.nombre, ejercicio });
+        }
+
+        const div = document.createElement("div");
+        div.className = "bg-gray-100 rounded-xl p-4 shadow";
+        div.innerHTML = `
+          <h2 class="text-xl font-bold mb-4">Día ${i + 1}</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            ${ejerciciosDia.map(ej => `
+              <div class="text-center space-y-2">
+                <img src="${getImagenEjercicio(ej.ejercicio)}" alt="${ej.ejercicio}" class="rounded-xl mx-auto shadow" />
+                <p class="font-semibold">${ej.grupo}</p>
+                <p class="text-gray-700">${ej.ejercicio}</p>
+                <p class="text-sm text-blue-600">${getSeriesYReps(intensidad)}</p>
+                <p class="text-sm text-gray-600 italic">${descripciones[ej.ejercicio] || ""}</p>
+              </div>
+            `).join("")}
+          </div>
+        `;
+        rutinaContainer.appendChild(div);
+      }
+    }
+
+    function limpiarRutina() {
+      rutinaContainer.innerHTML = "";
+      diasSlider.value = 3;
+      intensidadSlider.value = 3;
+      duracionSlider.value = 45;
+      diasValor.textContent = 3;
+      intensidadValor.textContent = 3;
+      duracionValor.textContent = 45;
+    }
+
+    function descargarPDF() {
+      if (rutinaContainer.innerHTML.trim() === "") {
+        alert("Primero generá tu rutina.");
+        return;
+      }
+
+      const opt = {
+        margin:       0.5,
+        filename:     'mi_rutina_TuGymBro.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+
+      html2pdf().from(rutinaContainer).set(opt).save();
+    }
+  </script>
+</body>
+</html>
