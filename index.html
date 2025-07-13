@@ -96,8 +96,8 @@
     ];
 
     function getImagenEjercicio(nombre) {
-      const query = encodeURIComponent(nombre + " workout");
-      return `https://source.unsplash.com/300x200/?${query}`;
+      const query = nombre.replace(/ /g, ',');
+      return `https://source.unsplash.com/300x200/?${query},workout`;
     }
 
     function getSeriesYReps(intensidad) {
